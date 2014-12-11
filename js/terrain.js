@@ -3,10 +3,12 @@ var Terrain = function() {
 	this.height = -1;
 	this.PNG = new SimplexNoise();
 	this.grid = [];
-	this.geometry = new THREE.Geometry();
 };
 
 Terrain.prototype.generate = function(w, h, padding, frequency, amplitude) {
+	if(w > 0) this.width = w;
+	if(h > 0) this.height = h;
+
 	for(var i = 0; i < w; ++i)
 		for(var j = 0; j < h; ++j) {
 			this.grid.push(new THREE.Vector3(
@@ -15,6 +17,4 @@ Terrain.prototype.generate = function(w, h, padding, frequency, amplitude) {
 				j * padding
 			));
 		}
-
-	this.geometry.vertices = this.grid;
 };
