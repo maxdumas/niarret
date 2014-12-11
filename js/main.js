@@ -7,7 +7,7 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 var terrain = new Terrain();
-terrain.generate(100, 100, 1, 0.008, 2);
+terrain.generate(100, 100, 1, 0.01, 5);
 
 var mat = new THREE.PointCloudMaterial();
 mat.size = 0.3;

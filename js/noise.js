@@ -97,8 +97,10 @@ return 70.0 * (n0 + n1 + n2);
 
 SimplexNoise.prototype.fnoise = function(x, y, octaves) {
 	var sum = 0;
+	var a = 1;
 	for(var i = 0; i < octaves; ++i) {
-		sum += this.noise(x * octaves, y * octaves) / octaves;
+		sum += this.noise(x * a, y * a) / a;
+		a *= 2;
 	}
 	return sum;
 };
