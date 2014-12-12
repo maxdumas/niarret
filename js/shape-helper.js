@@ -24,16 +24,7 @@ ShapeHelper.makeFaces = function(rows, cols, vertices) {
 			var tr = (j + 1) * rows + (i + 1) % rows;
 			var br = (j + 1) * rows + i;
 
-			// var dx = vertices[bl].clone().sub(vertices[br]);
-			// var dy = vertices[tr].clone().sub(vertices[br]);
-
-			// var n = dx.cross(dy);
 			faces.push(new THREE.Face3(tr, br, bl));
-
-			// dx = vertices[bl].clone().sub(vertices[br]);
-			// dy = vertices[tl].clone().sub(vertices[bl]);
-
-			// n = dx.cross(dy);
 			faces.push(new THREE.Face3(bl, tl, tr));
 		}
 	}
@@ -52,6 +43,6 @@ ShapeHelper.meshify = function(vertices, faces) {
 		geo.faces.push(faces[i]);
 	}
 
-	var material = new THREE.MeshNormalMaterial();
+	var material = new THREE.MeshPhongMaterial();
 	return new THREE.Mesh(geo, material);
 };

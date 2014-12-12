@@ -8,14 +8,15 @@ document.body.appendChild(renderer.domElement);
 
 var directionalLight = new THREE.PointLight( 0xffffff, 0.5 ); 
 directionalLight.position.set( 0, 10, 0 ); 
-scene.add( directionalLight );
+scene.add(directionalLight);
 
 var terrain = new Terrain();
-terrain.generate(100, 100, 1, 0.01, 5);
+terrain.generate(200, 200, 0.2, 0.002, 8);
 
 var faces = ShapeHelper.makeFaces(terrain.width, terrain.height, terrain.grid);
 var mesh = ShapeHelper.meshify(terrain.grid, faces, { color : 0xcccccc });
 mesh.geometry.computeFaceNormals();
+mesh.geometry.computeVertexNormals();
 scene.add(mesh);
 
 camera.position.y = 10;
