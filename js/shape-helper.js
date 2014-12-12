@@ -18,24 +18,23 @@ ShapeHelper.convertVertToVec3 = function(xyz_vertices) {
 ShapeHelper.makeFaces = function(rows, cols, vertices) {
 	var faces = [];
 	for (var j = 0; j < cols - 1; j ++) {
-		for (var i = 0; i < rows; i ++) {
-			var bl = j * rows + i;
+		for (var i = 0; i < rows - 1; i ++) {
+			var bl = (j * rows + i);
 			var tl = j * rows + (i + 1) % rows;
 			var tr = (j + 1) * rows + (i + 1) % rows;
 			var br = (j + 1) * rows + i;
 
-			var dx = vertices[bl].clone().sub(vertices[br]);
-			var dy = vertices[tr].clone().sub(vertices[br]);
+			// var dx = vertices[bl].clone().sub(vertices[br]);
+			// var dy = vertices[tr].clone().sub(vertices[br]);
 
-			var n = dx.cross(dy);
-			faces.push(new THREE.Face3(tr, br, bl, n));
+			// var n = dx.cross(dy);
+			faces.push(new THREE.Face3(tr, br, bl));
 
-			dx = vertices[bl].clone().sub(vertices[br]);
-			dy = vertices[tl].clone().sub(vertices[bl]);
-			console.log('dx', dx);
-			console.log('dy', dy);
-			n = dx.cross(dy);
-			faces.push(new THREE.Face3(bl, tl, tr, n));
+			// dx = vertices[bl].clone().sub(vertices[br]);
+			// dy = vertices[tl].clone().sub(vertices[bl]);
+
+			// n = dx.cross(dy);
+			faces.push(new THREE.Face3(bl, tl, tr));
 		}
 	}
 
@@ -53,6 +52,6 @@ ShapeHelper.meshify = function(vertices, faces) {
 		geo.faces.push(faces[i]);
 	}
 
-	var material = new THREE.MeshBasicMaterial();
+	var material = new THREE.MeshNormalMaterial();
 	return new THREE.Mesh(geo, material);
 };

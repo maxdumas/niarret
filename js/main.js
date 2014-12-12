@@ -15,6 +15,7 @@ terrain.generate(100, 100, 1, 0.01, 5);
 
 var faces = ShapeHelper.makeFaces(terrain.width, terrain.height, terrain.grid);
 var mesh = ShapeHelper.meshify(terrain.grid, faces, { color : 0xcccccc });
+mesh.geometry.computeFaceNormals();
 scene.add(mesh);
 
 camera.position.y = 10;
