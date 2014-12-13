@@ -43,6 +43,6 @@ ShapeHelper.meshify = function(vertices, faces) {
 		geo.faces.push(faces[i]);
 	}
 
-	var material = new THREE.MeshPhongMaterial();
+	var material = new THREE.MeshLambertMaterial();
 	return new THREE.Mesh(geo, material);
 };
