@@ -15,7 +15,7 @@ ShapeHelper.convertVertToVec3 = function(xyz_vertices) {
 	return vertices;
 };
 
-ShapeHelper.makeFaces = function(rows, cols, vertices) {
+ShapeHelper.makeFaces = function(rows, cols) {
 	var faces = [];
 	for (var j = 0; j < cols - 1; j ++) {
 		for (var i = 0; i < rows - 1; i ++) {
@@ -32,7 +32,7 @@ ShapeHelper.makeFaces = function(rows, cols, vertices) {
 	return faces;
 };
 
-ShapeHelper.meshify = function(vertices, faces) {
+ShapeHelper.meshify = function(mesh, vertices, faces) {
 	var geo = new THREE.Geometry();
 
 	for (var i = 0; i < vertices.length; ++i) {
@@ -43,6 +43,6 @@ ShapeHelper.meshify = function(vertices, faces) {
 		geo.faces.push(faces[i]);
 	}
 
-	var material = new THREE.MeshLambertMaterial();
-	return new THREE.Mesh(geo, material);
+	mesh.geometry = geo;
+	// return new THREE.Mesh(geo, new THREE.MeshLambertMaterial());	
 };

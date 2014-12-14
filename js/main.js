@@ -17,28 +17,31 @@ controls.movementSpeed = 20;
 controls.noFly = false;
 controls.lookVertical = true;
 
-/* Controls pitch of camera. Default is false.
-controls.constrainVertical = true;
-controls.verticalMin = -2.0;
-controls.verticalMax = 2.0;
-*/
-
-
-var terrain = new Terrain();
-terrain.generate(200, 200, 0.2, 0.002, 8);
-
-var faces = ShapeHelper.makeFaces(terrain.width, terrain.height, terrain.grid);
-var mesh = ShapeHelper.meshify(terrain.grid, faces, { color : 0xcccccc });
-mesh.geometry.computeFaceNormals();
-mesh.geometry.computeVertexNormals();
-scene.add(mesh);
-
 camera.position.y = 10;
 camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), 5 * Math.PI / 4);
 
 //Align controls with camera
 controls.lon = camera.position.x;
 controls.lat = camera.position.y;
+
+/* Controls pitch of camera. Default is false.
+controls.constrainVertical = true;
+controls.verticalMin = -2.0;
+controls.verticalMax = 2.0;
+*/
+
+var terrain = new TerrainGenerator();
+var mesh = new THREE.Mesh(new THREE.Geometry(), new THREE.MeshLambertMaterial());
+scene.add(mesh);
+generateTerrain();
+
+function generateTerrain() {
+	terrain.generate(500, 500, 0.2, 0.002, 8);
+	var faces = ShapeHelper.makeFaces(terrain.width, terrain.height);
+	ShapeHelper.meshify(mesh, terrain.heightmap, faces);
+	mesh.geometry.computeFaceNormals();
+	mesh.geometry.computeVertexNormals();
+}
 
 clock.start();
 function render() { 
@@ -52,3 +55,14 @@ function render() {
 } 
 render();
 clock.stop();
+
+function onKeyDown(event) {
+	if(event.keyCode == 69)
+		generateTerrain();
+}
+document.addEventListener("keydown", onKeyDown);
+
+function onKeyUp() {
+
+}
+document.addEventListener("keyup", onKeyUp);
