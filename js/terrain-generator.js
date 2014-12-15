@@ -1,49 +1,86 @@
 var TerrainGenerator = function() {
+	this.width = -1;
+	this.height = -1;
+	this.png = new SimplexNoise();
+	this.values = null;
 };
 
-TerrainGenerator.generateHeightmap = function(w, h, frequency, amplitude) {
-	if(w > 0) this.width = w;
-	if(h > 0) this.height = h;
+TerrainGenerator.prototype.dim = function(w, h) {
+	if(w <= 0) throw "Must specify a width greater than 0.";
+	if(h <= 0) throw "Must specify a height greater than 0.";
 
-	var png = new SimplexNoise();
-	var heightmap = [];
-	for(var i = 0; i < w; ++i)
-		for(var j = 0; j < h; ++j) {
-			heightmap.push(
-				amplitude * png.fnoise2d(i * frequency, j * frequency, 8)
-			);
+	this.width = w;
+	this.height = h;
+
+	return this;
+}
+
+TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
+	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
+	this.values = [];
+	for(var i = 0; i < this.width; ++i)
+		for(var j = 0; j < this.height; ++j) {
+			this.values.push({
+				altitude: amplitude * this.png.fnoise2d(i * frequency, j * frequency, 8)
+			});
 		}
 
-	return heightmap;
+	return this;
 };
 
-TerrainGenerator.createFaces = function(rows, cols) {
-	var faces = [];
-	for (var j = 0; j < cols - 1; j ++) {
-		for (var i = 0; i < rows - 1; i ++) {
-			var bl = (j * rows + i);
-			var tl = j * rows + (i + 1) % rows;
-			var tr = (j + 1) * rows + (i + 1) % rows;
-			var br = (j + 1) * rows + i;
+TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
+	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
 
-			faces.push(new THREE.Face3(tr, br, bl));
-			faces.push(new THREE.Face3(bl, tl, tr));
+	for(var i = 0; i < this.width; ++i)
+		for(var j = 0; j < this.height; ++j)
+			this.values[i * this.height + j].moisture = amplitude * this.png.noise2d(i * frequency, j * frequency);
+
+	return this;
+};
+
+TerrainGenerator.prototype.determineFaceColor = function(i, j, k) {
+	var a = this.values[i], b = this.values[j], c = this.values[k];
+
+	function p(x) { return x < 0 ? 0 : x; }
+	function n(x) { return x >= 0 ? 0 : -x; }
+
+	var psum = p(a.moisture) + p(b.moisture) + p(c.moisture);
+	var nsum = n(a.moisture) + n(b.moisture) + n(c.moisture);
+	return new THREE.Color(2 * nsum / 3, 0.5, 2 * psum / 3);
+};
+
+TerrainGenerator.prototype.createFaces = function(w, h) {
+	console.log(this);
+	var faces = [];
+	for (var j = 0; j < w - 1; ++j) {
+		for (var i = 0; i < h - 1; ++i) {
+			var bl = j * h + i;
+			var tl = j * h + (i + 1) % h;
+			var tr = (j + 1) * h + (i + 1) % h;
+			var br = (j + 1) * h + i;
+
+			var c0 = this.determineFaceColor(tr, br, bl);
+			var c1 = this.determineFaceColor(bl, tl, tr);
+
+			faces.push(new THREE.Face3(tr, br, bl, null, c0));
+			faces.push(new THREE.Face3(bl, tl, tr, null, c1));
 		}
 	}
 
 	return faces;
 };
 
-TerrainGenerator.createGeometry = function(w, h, heightmap, gridSize) {
+TerrainGenerator.prototype.createGeometry = function(gridSize) {
+	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
+
 	var geo = new THREE.Geometry();
+	var faces = this.createFaces(this.width, this.height);
 
-	var faces = this.createFaces(h, w);
-
-	for(var i = 0; i < w; ++i)
-		for(var j = 0; j < h; ++j) {
+	for(var i = 0; i < this.width; ++i)
+		for(var j = 0; j < this.height; ++j) {
 			geo.vertices.push(new THREE.Vector3(
 				i * gridSize,
-				heightmap[i * h + j],
+				this.values[i * this.height + j].altitude,
 				j * gridSize
 			));
 		}

@@ -29,14 +29,18 @@ controls.constrainVertical = true;
 controls.verticalMin = -2.0;
 controls.verticalMax = 2.0;
 */
-
-var mesh = new THREE.Mesh(new THREE.Geometry(), new THREE.MeshLambertMaterial());
+var mat = new THREE.MeshLambertMaterial();
+mat.vertexColors = THREE.FaceColors;
+var mesh = new THREE.Mesh(new THREE.Geometry(), mat);
 scene.add(mesh);
 generateTerrain();
 
 function generateTerrain() {
-	var heightmap = TerrainGenerator.generateHeightmap(500, 500, 0.002, 8);
-	mesh.geometry = TerrainGenerator.createGeometry(500, 500, heightmap, 0.2);
+	mesh.geometry = (new TerrainGenerator())
+						.dim(100, 100)
+						.generateHeightmap(0.002, 8)
+						.generateMoisture(0.01, 1)
+						.createGeometry(0.2);
 }
 
 clock.start();
