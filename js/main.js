@@ -20,7 +20,7 @@ controls.lookVertical = true;
 camera.position.y = 10;
 camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), 5 * Math.PI / 4);
 
-//Align controls with camera
+//Align controlas with camera
 controls.lon = camera.position.x;
 controls.lat = camera.position.y;
 
@@ -29,6 +29,7 @@ controls.constrainVertical = true;
 controls.verticalMin = -2.0;
 controls.verticalMax = 2.0;
 */
+
 var mat = new THREE.MeshLambertMaterial();
 mat.vertexColors = THREE.FaceColors;
 var mesh = new THREE.Mesh(new THREE.Geometry(), mat);
@@ -37,9 +38,10 @@ generateTerrain();
 
 function generateTerrain() {
 	mesh.geometry = (new TerrainGenerator())
-						.dim(100, 100)
+						.dim(250, 250)
 						.generateHeightmap(0.002, 8)
 						.generateMoisture(0.01, 1)
+						.apply(TerrainGenerator.HydraulicErosion, false, 100)
 						.createGeometry(0.2);
 }
 
