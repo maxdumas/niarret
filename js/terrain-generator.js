@@ -9,12 +9,12 @@ TerrainGenerator.prototype.generate = function(w, h, padding, frequency, amplitu
 	if(h > 0) this.height = h;
 
 	var png = new SimplexNoise();
-	
+	this.heightmap = [];
 	for(var i = 0; i < w; ++i)
 		for(var j = 0; j < h; ++j) {
 			this.heightmap.push(new THREE.Vector3(
 				i * padding, 
-				amplitude * png.fnoise(i * frequency, j * frequency, 8),
+				amplitude * png.fnoise2d(i * frequency, j * frequency, 8),
 				j * padding
 			));
 		}

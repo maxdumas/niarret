@@ -6,8 +6,8 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 ); 
-directionalLight.position.set( 0, 10, 0 ); 
+var directionalLight = new THREE.DirectionalLight(0xffffff, 0.5); 
+directionalLight.position.set(0, 10, 0); 
 scene.add(directionalLight);
 
 
@@ -54,7 +54,6 @@ function render() {
 	renderer.render(scene, camera); 
 } 
 render();
-clock.stop();
 
 function onKeyDown(event) {
 	if(event.keyCode == 69)

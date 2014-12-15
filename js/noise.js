@@ -22,25 +22,13 @@ var SimplexNoise = function(r) {
 	for(var i=0; i<512; i++) {
 		this.perm[i] = this.p[i & 255];
 	}
-
-	// A lookup table to traverse the simplex around a given point in 4D.
-	// Details can be found where this table is used, in the 4D noise method.
-	this.simplex = [
-	[0,1,2,3],[0,1,3,2],[0,0,0,0],[0,2,3,1],[0,0,0,0],[0,0,0,0],[0,0,0,0],[1,2,3,0],
-	[0,2,1,3],[0,0,0,0],[0,3,1,2],[0,3,2,1],[0,0,0,0],[0,0,0,0],[0,0,0,0],[1,3,2,0],
-	[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],
-	[1,2,0,3],[0,0,0,0],[1,3,0,2],[0,0,0,0],[0,0,0,0],[0,0,0,0],[2,3,0,1],[2,3,1,0],
-	[1,0,2,3],[1,0,3,2],[0,0,0,0],[0,0,0,0],[0,0,0,0],[2,0,3,1],[0,0,0,0],[2,1,3,0],
-	[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0],
-	[2,0,1,3],[0,0,0,0],[0,0,0,0],[0,0,0,0],[3,0,1,2],[3,0,2,1],[0,0,0,0],[3,1,2,0],
-	[2,1,0,3],[0,0,0,0],[0,0,0,0],[0,0,0,0],[3,1,0,2],[0,0,0,0],[3,2,0,1],[3,2,1,0]];
 };
 
 SimplexNoise.prototype.dot = function(g, x, y) {
 	return g[0]*x + g[1]*y;
 };
 
-SimplexNoise.prototype.noise = function(xin, yin) {
+SimplexNoise.prototype.noise2d = function(xin, yin) {
 	var n0, n1, n2; // Noise contributions from the three corners
 	// Skew the input space to determine which simplex cell we're in
 	var F2 = 0.5*(Math.sqrt(3.0)-1.0);
@@ -57,7 +45,7 @@ SimplexNoise.prototype.noise = function(xin, yin) {
 	// Determine which simplex we are in.
 	var i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
 	if(x0>y0) {i1=1; j1=0;} // lower triangle, XY order: (0,0)->(1,0)->(1,1)
-	else {i1=0; j1=1;} // upper triangle, YX order: (0,0)->(0,1)->(1,1)
+	else 	  {i1=0; j1=1;} // upper triangle, YX order: (0,0)->(0,1)->(1,1)
 	// A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
 	// a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
 	// c = (3-sqrt(3))/6
@@ -76,7 +64,7 @@ SimplexNoise.prototype.noise = function(xin, yin) {
 	if(t0<0) n0 = 0.0;
 	else {
 		t0 *= t0;
-	n0 = t0 * t0 * this.dot(this.grad3[gi0], x0, y0); // (x,y) of grad3 used for 2D gradient
+		n0 = t0 * t0 * this.dot(this.grad3[gi0], x0, y0); // (x,y) of grad3 used for 2D gradient
 	}
 	var t1 = 0.5 - x1*x1-y1*y1;
 	if(t1<0) n1 = 0.0;
@@ -95,11 +83,11 @@ SimplexNoise.prototype.noise = function(xin, yin) {
 	return 70.0 * (n0 + n1 + n2);
 };
 
-SimplexNoise.prototype.fnoise = function(x, y, octaves) {
+SimplexNoise.prototype.fnoise2d = function(x, y, octaves) {
 	var sum = 0;
 	var a = 1;
 	for(var i = 0; i < octaves; ++i) {
-		sum += this.noise(x * a, y * a) / a;
+		sum += this.noise2d(x * a, y * a) / a;
 		a *= 2;
 	}
 	return sum;
