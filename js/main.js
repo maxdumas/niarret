@@ -30,17 +30,13 @@ controls.verticalMin = -2.0;
 controls.verticalMax = 2.0;
 */
 
-var terrain = new TerrainGenerator();
 var mesh = new THREE.Mesh(new THREE.Geometry(), new THREE.MeshLambertMaterial());
 scene.add(mesh);
 generateTerrain();
 
 function generateTerrain() {
-	terrain.generate(500, 500, 0.2, 0.002, 8);
-	var faces = ShapeHelper.makeFaces(terrain.width, terrain.height);
-	ShapeHelper.meshify(mesh, terrain.heightmap, faces);
-	mesh.geometry.computeFaceNormals();
-	mesh.geometry.computeVertexNormals();
+	var heightmap = TerrainGenerator.generateHeightmap(500, 500, 0.002, 8);
+	mesh.geometry = TerrainGenerator.createGeometry(500, 500, heightmap, 0.2);
 }
 
 clock.start();
@@ -56,7 +52,7 @@ function render() {
 render();
 
 function onKeyDown(event) {
-	if(event.keyCode == 69)
+	if(event.keyCode == 69) // Letter E
 		generateTerrain();
 }
 document.addEventListener("keydown", onKeyDown);
