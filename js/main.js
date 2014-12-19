@@ -41,7 +41,7 @@ function generateTerrain() {
 						.dim(250, 250)
 						.generateHeightmap(0.002, 8)
 						.generateMoisture(0.01, 1)
-						.apply(TerrainGenerator.HydraulicErosion, false, 100)
+						.apply(TerrainGenerator.MusgraveHydraulicErosion, false, 500)
 						.createGeometry(0.2);
 }
 

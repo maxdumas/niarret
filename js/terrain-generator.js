@@ -3,7 +3,6 @@ var TerrainGenerator = function() {
 	this.height = -1;
 	this.png = new SimplexNoise();
 	this.values = null;
-
 };
 
 TerrainGenerator.prototype.dim = function(w, h) {
@@ -42,11 +41,9 @@ TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
 	for(var i = 0; i < this.width; ++i)
 		for(var j = 0; j < this.height; ++j) {
 			var m = 0.5; //amplitude * this.png.noise2d(i * frequency, j * frequency);
-			if (m < this.altitudeExtrema.min) this.altitudeExtrema.min = m;
-			else if (m > this.altitudeExtrema.max) this.altitudeExtrema.max = m;
 			var v = this.values[i * this.height + j];
 			v.moisture = m;
-			v.sediment = m;
+			v.sediment = 0.25;
 		}
 
 	return this;
@@ -59,63 +56,88 @@ TerrainGenerator.prototype.apply = function(func, edges, iterations) {
 	for(var t = 0; t < iterations; ++t)
 		for(var i = o; i < this.width - o; ++i)
 			for(var j = o; j < this.height - o; ++j)
-				func.bind(this)(i, j);
+				func(this, i, j);
 
 	return this;
 };
 
-TerrainGenerator.HydraulicErosion = function(i, j) {
-	var Kc = 0.5, // Maximum ratio of water to sediment
+TerrainGenerator.MusgraveHydraulicErosion = function(terrain, i, j) {
+	// This is based on Musgrave[1989]
+	var Kc = 1.0, // Maximum ratio of water to sediment
 		Kd = 0.1, // Rate of sediment settlement
 		Ks = 0.3; // Rate of conversion of soil to sediment
-	// This is based on Musgrave[1985]
-	var loc = this.values[i * this.height + j];
+	var loc = terrain.values[i * terrain.height + j];
 	var v = {}; // We are using v as shorthand
 	v.a = loc.altitude; // Height of v
 	v.w = loc.moisture; // Water at v
 	v.s = loc.sediment; // Sediment suspended in water at v
 
-	for(var x = -1; x <= 1; ++x)
-		for(var y = -1; y <= 1; ++y) {
-			if(x == 0 && y == 0) continue;
-			var k = (i + x) * this.height + (j + y);
+	// Deposit any remaining sediment in the water
+	
 
-			var neighbor = this.values[k];
+	var dh = [];
+	var sum = 0;
+	for(var di = -1; di <= 1; ++di) // Calculating distribution of water
+		for(var dj = -1; dj <= 1; ++dj) {
+			if(di == 0 && dj == 0) continue;
+
+			var k = (i + di) * terrain.height + (j + dj);
+
+			var neighbor = terrain.values[k];
 			var u = {};
 			u.a = neighbor.altitude;
 			u.w = neighbor.moisture;
 			u.s = neighbor.sediment;
 
-			var dw = Math.min(v.w, (v.w + v.a) - (u.w + u.a));
+			
+			var dhi = (v.a + v.w) - (u.a + u.w);
 
-			if(dw <= 0) { // Deposit sediment in water at v
-				v.a = v.a + Kd * v.s;
-				v.s = (1 - Kd) * v.s;
-			} else { // Transfer sediment from v to u
-				v.w -= dw;
-				u.w += dw;
-				var cs = Kc * dw; // Sediment capacity
-
-				if(v.s >= cs) { // If vs is holding more sediment than it can...
-					u.s += cs; // Deposit some of that onto the surface!
-					v.a += Kd * (v.s - cs);
-					v.s = (1 - Kd) * (v.s - cs);
-				} else { // If the water above vs could hold more sediment
-					u.s += v.s + Ks * (cs - v.s); // We take some away
-					v.a -= Ks * (cs - v.s);
-					v.s = 0;
-				}
+			// v's height and water make it higher than its surrounding neighbors,
+			// so prepare to distribute the water
+			if(dhi > 0) {
+				sum += dhi;
+				dh.push({ k: k, u: u, dhi: dhi });
 			}
-
-			neighbor.altitude = u.a;
-			neighbor.moisture = u.w;
-			neighbor.sediment = u.s;
 		}
+
+	if(dh.length == 0) {
+		v.a += Kd * v.s;
+		v.s *= (1 - Kd);
+	}
+
+	dh.forEach(function(x) {
+		var u = x.u;
+		var dw = Math.min(v.w, (v.w + v.a) - (u.w + u.a));
+
+		dw *= x.dhi / sum;
+
+		v.w -= dw; // BUG: if dw = v.w here, all moisture in v goes to this one u!
+		u.w += dw;
+		var cs = Kc * dw; // Sediment capacity
+
+		if(v.s >= cs) { // If vs is holding more sediment than it can...
+			u.s += cs; 
+			v.a += Kd * (v.s - cs); // Deposit some of that onto the surface!
+			v.s = (1 - Kd) * (v.s - cs);
+		} else { // If the water above vs could hold more sediment
+			u.s += v.s + Ks * (cs - v.s); // We take some away
+			v.a -= Ks * (cs - v.s);
+			v.s = 0;
+		}
+
+		terrain.values[x.k].altitude = u.a;
+		terrain.values[x.k].moisture = u.w;
+		terrain.values[x.k].sediment = u.s;
+	});
 
 	loc.altitude = v.a;
 	loc.moisture = v.w;
 	loc.sediment = v.s;
 };
+
+TerrainGenerator.BenesHydraulicErosion = function(terrain, i, j) {
+
+}
 
 TerrainGenerator.prototype.determineFaceColor = function(i, j, k) {
 	var a = this.values[i], b = this.values[j], c = this.values[k];
@@ -123,9 +145,10 @@ TerrainGenerator.prototype.determineFaceColor = function(i, j, k) {
 	function p(x) { return x < 0.5 ? 0 : x; }
 	function n(x) { return x >= 0.5 ? 0 : x; }
 
-	var psum = p(a.moisture) + p(b.moisture) + p(c.moisture);
-	var nsum = n(a.moisture) + n(b.moisture) + n(c.moisture);
-	return new THREE.Color(2 * nsum / 3, 0.5, 2 * psum / 3);
+	// var psum = p(a.moisture) + p(b.moisture) + p(c.moisture);
+	// var nsum = n(a.moisture) + n(b.moisture) + n(c.moisture);
+	var sum = a.moisture + b.moisture + c.moisture;
+	return new THREE.Color(0.5, 0.5, 0.5);//sum / 3);//(2 * nsum / 3, 0.5, 2 * psum / 3);
 };
 
 TerrainGenerator.prototype.createFaces = function(w, h) {
