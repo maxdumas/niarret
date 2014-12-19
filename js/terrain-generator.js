@@ -15,6 +15,12 @@ TerrainGenerator.prototype.dim = function(w, h) {
 	return this;
 }
 
+TerrainGenerator.prototype.get = function(i, j) {
+	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
+
+	return this.values[i * this.height + j];
+}
+
 TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
 	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
 	
@@ -44,19 +50,20 @@ TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
 			var v = this.values[i * this.height + j];
 			v.moisture = m;
 			v.sediment = 0.25;
+			v.temperature = 0.6;
 		}
 
 	return this;
 };
 
-TerrainGenerator.prototype.apply = function(func, edges, iterations) {
+TerrainGenerator.prototype.apply = function(func, edges, opts, iterations) {
 	if(!iterations) iterations = 1;
 	var o = edges ? 0 : 1;
 
 	for(var t = 0; t < iterations; ++t)
 		for(var i = o; i < this.width - o; ++i)
 			for(var j = o; j < this.height - o; ++j)
-				func(this, i, j);
+				func(this, i, j, opts);
 
 	return this;
 };
@@ -66,89 +73,91 @@ TerrainGenerator.MusgraveHydraulicErosion = function(terrain, i, j) {
 	var Kc = 1.0, // Maximum ratio of water to sediment
 		Kd = 0.1, // Rate of sediment settlement
 		Ks = 0.3; // Rate of conversion of soil to sediment
-	var loc = terrain.values[i * terrain.height + j];
-	var v = {}; // We are using v as shorthand
-	v.a = loc.altitude; // Height of v
-	v.w = loc.moisture; // Water at v
-	v.s = loc.sediment; // Sediment suspended in water at v
+	var v = terrain.get(i, j);
 
 	// Deposit any remaining sediment in the water
-	
-
 	var dh = [];
 	var sum = 0;
 	for(var di = -1; di <= 1; ++di) // Calculating distribution of water
 		for(var dj = -1; dj <= 1; ++dj) {
 			if(di == 0 && dj == 0) continue;
 
-			var k = (i + di) * terrain.height + (j + dj);
-
-			var neighbor = terrain.values[k];
-			var u = {};
-			u.a = neighbor.altitude;
-			u.w = neighbor.moisture;
-			u.s = neighbor.sediment;
-
-			
-			var dhi = (v.a + v.w) - (u.a + u.w);
+			// var k = (i + di) * terrain.height + (j + dj);
+			var u = terrain.get(i + di, j + dj);
+			var dhi = (v.altitude + v.moisture) - (u.altitude + u.moisture);
 
 			// v's height and water make it higher than its surrounding neighbors,
 			// so prepare to distribute the water
 			if(dhi > 0) {
 				sum += dhi;
-				dh.push({ k: k, u: u, dhi: dhi });
+				dh.push({ u: u, dhi: dhi });
 			}
 		}
 
 	if(dh.length == 0) {
-		v.a += Kd * v.s;
-		v.s *= (1 - Kd);
+		v.altitude += Kd * v.sediment;
+		v.sediment *= (1 - Kd);
 	}
 
 	dh.forEach(function(x) {
 		var u = x.u;
-		var dw = Math.min(v.w, (v.w + v.a) - (u.w + u.a));
+		var dw = Math.min(v.moisture, (v.moisture + v.altitude) - (u.moisture + u.altitude));
 
 		dw *= x.dhi / sum;
 
-		v.w -= dw; // BUG: if dw = v.w here, all moisture in v goes to this one u!
-		u.w += dw;
+		v.moisture -= dw; // BUG: if dw = v.moisture here, all moisture in v goes to this one u!
+		u.moisture += dw;
 		var cs = Kc * dw; // Sediment capacity
 
-		if(v.s >= cs) { // If vs is holding more sediment than it can...
-			u.s += cs; 
-			v.a += Kd * (v.s - cs); // Deposit some of that onto the surface!
-			v.s = (1 - Kd) * (v.s - cs);
+		if(v.sediment >= cs) { // If vs is holding more sediment than it can...
+			u.sediment += cs; 
+			v.altitude += Kd * (v.sediment - cs); // Deposit some of that onto the surface!
+			v.sediment = (1 - Kd) * (v.sediment - cs);
 		} else { // If the water above vs could hold more sediment
-			u.s += v.s + Ks * (cs - v.s); // We take some away
-			v.a -= Ks * (cs - v.s);
-			v.s = 0;
+			u.sediment += v.sediment + Ks * (cs - v.sediment); // We take some away
+			v.altitude -= Ks * (cs - v.sediment);
+			v.sediment = 0;
 		}
-
-		terrain.values[x.k].altitude = u.a;
-		terrain.values[x.k].moisture = u.w;
-		terrain.values[x.k].sediment = u.s;
 	});
-
-	loc.altitude = v.a;
-	loc.moisture = v.w;
-	loc.sediment = v.s;
 };
 
-TerrainGenerator.BenesHydraulicErosion = function(terrain, i, j) {
+TerrainGenerator.BiomeClassification = function(terrain, i, j, opts) {
+	var v = terrain.get(i, j);
+	if(!v.biome) v.biome = {};
 
-}
+	if(opts.temperatureClass) 
+		v.biome.temperature = TerrainGenerator.DefaultTemperatureClassifier(v, opts.temperatureClass);
+	if(opts.moistureClass) 
+		v.biome.moisture = TerrainGenerator.DefaultMoistureClassifier(v, opts.moistureClass);
+	if(opts.biomeMatrix) {
+		v.biome.name = opts.biomeMatrix[v.biome.temperature.index || 0][v.biome.moisture.index || 0];
+	}
+	if(opts.colorGradient) v.color = opts.colorGradient(v);
+};
+
+TerrainGenerator.DefaultTemperatureClassifier = function(v, tempClass) {
+	for(var q = 0; q < tempClass.length; ++q)
+		if(tempClass[q].value >= v.temperature || q == tempClass.length - 1) {
+			return { name: tempClass[q].name, index: q };
+		}
+};
+
+TerrainGenerator.DefaultMoistureClassifier = function(v, moistureClass) {
+	for(var q = 0; q < moistureClass.length; ++q)
+		if(moistureClass[q].value >= v.moisture || q == moistureClass.length - 1) {
+			return { name: moistureClass[q].name, index: q };
+		}
+};
 
 TerrainGenerator.prototype.determineFaceColor = function(i, j, k) {
 	var a = this.values[i], b = this.values[j], c = this.values[k];
-
-	function p(x) { return x < 0.5 ? 0 : x; }
-	function n(x) { return x >= 0.5 ? 0 : x; }
-
-	// var psum = p(a.moisture) + p(b.moisture) + p(c.moisture);
-	// var nsum = n(a.moisture) + n(b.moisture) + n(c.moisture);
-	var sum = a.moisture + b.moisture + c.moisture;
-	return new THREE.Color(0.5, 0.5, 0.5);//sum / 3);//(2 * nsum / 3, 0.5, 2 * psum / 3);
+	var ac = a.color || new THREE.Color(0.5, 0.5, 0.5);
+	var bc = b.color || new THREE.Color(0.5, 0.5, 0.5);
+	var cc = c.color || new THREE.Color(0.5, 0.5, 0.5);
+	var rsum = ac.r + bc.r + cc.r;
+	var gsum = ac.g + bc.g + cc.g;
+	var bsum = ac.b + bc.b + cc.b;
+	return new THREE.Color(rsum / 3, gsum / 3, bsum / 3);
 };
 
 TerrainGenerator.prototype.createFaces = function(w, h) {
@@ -194,3 +203,26 @@ TerrainGenerator.prototype.createGeometry = function(gridSize) {
 
 	return geo;
 };
+
+// In DefaultMoistureClassifier, a vertex recieves the first classification for which
+// it fails to exceed that classification's moisture value
+TerrainGenerator.DefaultMoistureClassification = [
+	{ value: 0.3, name: 'Dry' }, 
+	{ value: 0.6, name: 'Normal' }, 
+	{ value: 0.9, name: 'Wet' },
+	{ value: 1.0, name: 'Underwater'}
+];
+TerrainGenerator.DefaultTemperatureClassification = [
+	{ value: 0.25, name: 'Freezing' }, 
+	{ value: 0.5, name: 'Cold' }, 
+	{ value: 0.75, name: 'Normal' },
+	{ value: 1.0, name: 'Hot' }
+];
+
+TerrainGenerator.DefaultBiomeMatrix = 
+[	// DRY					NORMAL						WET						UNDERWATER
+	['Bare', 				'Tundra', 					'Snow',				 , 'Glacier'],// FREEZING
+	['Grassland',			'Shrubland',				'Taiga',			 , 'Glacier'],// COLD
+	['TemperateDesert',		'TemperateDeciduousForest', 'TemperateRainForest', 'Water'],// NORMAL
+	['SubTropicalDesert',	'TropicalSeasonalForest',	'TropicalRainForest' , 'Water']// HOT
+];

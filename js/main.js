@@ -24,16 +24,29 @@ camera.rotateOnAxis(new THREE.Vector3(0, 1, 0), 5 * Math.PI / 4);
 controls.lon = camera.position.x;
 controls.lat = camera.position.y;
 
-/* Controls pitch of camera. Default is false.
-controls.constrainVertical = true;
-controls.verticalMin = -2.0;
-controls.verticalMax = 2.0;
-*/
-
 var mat = new THREE.MeshLambertMaterial();
 mat.vertexColors = THREE.FaceColors;
 var mesh = new THREE.Mesh(new THREE.Geometry(), mat);
 scene.add(mesh);
+
+var classificationOpts = {
+	temperatureClass: TerrainGenerator.DefaultTemperatureClassification,
+	moistureClass: TerrainGenerator.DefaultMoistureClassification,
+	biomeMatrix: TerrainGenerator.DefaultBiomeMatrix,
+	colorGradient: function(v) { 
+		//'TemperateDesert',		'TemperateDeciduousForest', 'TemperateRainForest', 'Water']
+		if(v.biome.name == 'TemperateDesert')
+			return new THREE.Color(1, 1, 0);
+		else if(v.biome.name == 'TemperateDeciduousForest')
+			return new THREE.Color(0, 1, 0);
+		else if(v.biome.name == 'TemperateRainForest')
+			return new THREE.Color(0, 1, 1);
+		else if(v.biome.name == 'Water')
+			return new THREE.Color(0, 0, 1);
+		else return new THREE.Color(1, 0, 0);
+	}
+};
+
 generateTerrain();
 
 function generateTerrain() {
@@ -41,7 +54,8 @@ function generateTerrain() {
 						.dim(250, 250)
 						.generateHeightmap(0.002, 8)
 						.generateMoisture(0.01, 1)
-						.apply(TerrainGenerator.MusgraveHydraulicErosion, false, 500)
+						.apply(TerrainGenerator.MusgraveHydraulicErosion, false, null, 500)
+						.apply(TerrainGenerator.BiomeClassification, true, classificationOpts)
 						.createGeometry(0.2);
 }
 
