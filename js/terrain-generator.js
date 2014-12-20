@@ -51,6 +51,10 @@ TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
 			v.moisture = m;
 			v.sediment = 0.25;
 			v.temperature = 0.6;
+			//Temperature is loosely inversely related to altitude. 
+			//var alt_weight = 0.5;
+			//v.temperature = Math.abs(amplitude * this.png.noise2d(i * frequency, j * frequency) * 1 / (alt_weight * v.altitude));
+
 		}
 
 	return this;

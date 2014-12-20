@@ -34,16 +34,21 @@ var classificationOpts = {
 	moistureClass: TerrainGenerator.DefaultMoistureClassification,
 	biomeMatrix: TerrainGenerator.DefaultBiomeMatrix,
 	colorGradient: function(v) { 
+
 		//'TemperateDesert',		'TemperateDeciduousForest', 'TemperateRainForest', 'Water']
+		
+		
 		if(v.biome.name == 'TemperateDesert')
 			return new THREE.Color(1, 1, 0);
 		else if(v.biome.name == 'TemperateDeciduousForest')
 			return new THREE.Color(0, 1, 0);
 		else if(v.biome.name == 'TemperateRainForest')
 			return new THREE.Color(0, 1, 1);
-		else if(v.biome.name == 'Water')
+		else if(v.biome.name == 'Water')			
 			return new THREE.Color(0, 0, 1);
 		else return new THREE.Color(1, 0, 0);
+		
+		//To see heatmap: return new THREE.Color(v.temperature, 0, 0);
 	}
 };
 
