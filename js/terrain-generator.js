@@ -52,8 +52,8 @@ TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
 			v.sediment = 0.25;
 			v.temperature = 0.6;
 			//Temperature is loosely inversely related to altitude. 
-			//var alt_weight = 0.5;
-			//v.temperature = Math.abs(amplitude * this.png.noise2d(i * frequency, j * frequency) * 1 / (alt_weight * v.altitude));
+			var alt_weight = 0.7;
+			v.temperature = Math.abs(amplitude * this.png.noise2d(i * frequency, j * frequency) * 1 / (alt_weight * v.altitude));
 
 		}
 
@@ -135,7 +135,7 @@ TerrainGenerator.BiomeClassification = function(terrain, i, j, opts) {
 		v.biome.moisture = TerrainGenerator.DefaultMoistureClassifier(v, opts.moistureClass);
 	if(opts.biomeMatrix) {
 		v.biome.name = opts.biomeMatrix[v.biome.temperature.index || 0][v.biome.moisture.index || 0];
-	}
+	} 
 	if(opts.colorGradient) v.color = opts.colorGradient(v);
 };
 
@@ -217,16 +217,16 @@ TerrainGenerator.DefaultMoistureClassification = [
 	{ value: 1.0, name: 'Underwater'}
 ];
 TerrainGenerator.DefaultTemperatureClassification = [
-	{ value: 0.25, name: 'Freezing' }, 
-	{ value: 0.5, name: 'Cold' }, 
-	{ value: 0.75, name: 'Normal' },
-	{ value: 1.0, name: 'Hot' }
+	{ value: 0.1, name: 'Freezing' }, 
+	{ value: 0.2, name: 'Cold' }, 
+	{ value: 0.3, name: 'Normal' },
+	{ value: 0.5, name: 'Hot' }
 ];
 
 TerrainGenerator.DefaultBiomeMatrix = 
 [	// DRY					NORMAL						WET						UNDERWATER
-	['Bare', 				'Tundra', 					'Snow',				 , 'Glacier'],// FREEZING
-	['Grassland',			'Shrubland',				'Taiga',			 , 'Glacier'],// COLD
+	['Bare', 				'Tundra', 					'Snow',				  'Glacier'],// FREEZING
+	['Grassland',			'Shrubland',				'Taiga',			  'Glacier'],// COLD
 	['TemperateDesert',		'TemperateDeciduousForest', 'TemperateRainForest', 'Water'],// NORMAL
 	['SubTropicalDesert',	'TropicalSeasonalForest',	'TropicalRainForest' , 'Water']// HOT
 ];

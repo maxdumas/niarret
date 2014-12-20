@@ -37,7 +37,6 @@ var classificationOpts = {
 
 		//'TemperateDesert',		'TemperateDeciduousForest', 'TemperateRainForest', 'Water']
 		
-		
 		if(v.biome.name == 'TemperateDesert')
 			return new THREE.Color(1, 1, 0);
 		else if(v.biome.name == 'TemperateDeciduousForest')
@@ -46,9 +45,38 @@ var classificationOpts = {
 			return new THREE.Color(0, 1, 1);
 		else if(v.biome.name == 'Water')			
 			return new THREE.Color(0, 0, 1);
-		else return new THREE.Color(1, 0, 0);
+		else if(v.biome.name == 'Grassland')
+			return new THREE.Color(0, 0.8, 0);
+		else if(v.biome.name == 'Shrubland')
+			return new THREE.Color(0.2, 0.4, 0);
+		else if(v.biome.name == 'Taiga')
+			return new THREE.Color(0, 0.4, 0.4);
+		else if(v.biome.name == 'Glacier')
+			return new THREE.Color(0, 0.8, 0.8);
+        else if(v.biome.name == 'SubTropicalDesert')
+        	return new THREE.Color(0.8, 0.4, 0);
+		else if(v.biome.name == 'TropicalSeasonalForest')
+			return new THREE.Color(0, 0.6, 0.3);
+		else if(v.biome.name == 'TropicalRainForest')
+			return new THREE.Color(0.2, 0.4, 0);
+		else if(v.biome.name == 'Bare')
+			return new THREE.Color(0.6, 0.6, 0);
+		else if(v.biome.name == 'Tundra')
+			return new THREE.Color(0.88, 0.88, 0.88);
+		else if(v.biome.name == 'Snow')
+			return new THREE.Color(1, 1, 1);
+		else {
+			return new THREE.Color(1, 0, 0);		}
+
 		
-		//To see heatmap: return new THREE.Color(v.temperature, 0, 0);
+		/*
+
+		//To see heatmap: 
+		//return new THREE.Color(v.temperature, 0, 0);
+
+		var c = new THREE.Color(v.temperature, 0.3, 0);
+		return c.lerp(new THREE.Color(0, 0.4, v.moisture), 0.1);
+		*/
 	}
 };
 
