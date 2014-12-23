@@ -73,7 +73,7 @@ TerrainGenerator.Smooth = function(terrain, i, j, opts) {
 	var a = opts.neighborSmoothWeight || 1;
 
 	var avg = 0;
-	for(var di = -1; di <= 1; ++di) // Calculating distribution of water
+	for(var di = -1; di <= 1; ++di)
 		for(var dj = -1; dj <= 1; ++dj) {
 			if(di == 0 && dj == 0) continue;
 			avg += terrain.get(i + di, j + dj).altitude;
