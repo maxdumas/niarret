@@ -23,7 +23,7 @@ TerrainGenerator.prototype.get = function(i, j) {
 
 TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
 	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
-	
+	console.log("Generating heightmap...")
 	this.altitudeExtrema = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
 	this.values = [];
 	for(var i = 0; i < this.width; ++i)
@@ -38,20 +38,35 @@ TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
 		}
 		this.altitudeExtrema.range = this.altitudeExtrema.max - this.altitudeExtrema.min;
 	return this;
+
+	// Normalize heightmap values into our amplitude range
+	// for(var i = 0; i < this.width; ++i)
+	// 	for(var j = 0; j < this.height; ++j) {
+	// 		var v = this.get(i, j);
+	// 		v.altitude = THREE.Math.mapLinear(v.altitude, this.altitudeExtrema.min, this.altitudeExtrema.max, 0, amplitude);
+	// 	}
 };
 
 TerrainGenerator.prototype.generateClimate = function(mFrequency, tFrequency) {
 	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
+	var mOffset = THREE.Math.randFloatSpread(0.5); // We use this make biomes randomly cold
+	var tOffset = THREE.Math.randFloatSpread(0.5); // or arid, or vice versa
+	console.log("Generating climate...")
+	console.log('Moisture Offset: ' + mOffset);
+	console.log('Temperature Offset: ' + tOffset);
 
 	for(var i = 0; i < this.width; ++i)
 		for(var j = 0; j < this.height; ++j) {
 			var v = this.get(i, j);
-			var m = 0.5 + 0.5 * this.png.noise2d(i * mFrequency, j * mFrequency);
+			var m = 0.5 + 0.5 * this.png.fnoise2d(i * mFrequency, j * mFrequency, 8);
+			m = THREE.Math.clamp(m + mOffset, 0, 1);
 			// These are all the same until hydraulic processes are applied
 			v.moisture = v.waterLevel = v.rainfall = m; 
 			v.sediment = m / 2;
 			//Temperature is loosely inversely related to altitude. 
-			v.temperature = 0.5 + 0.5 * this.png.fnoise2d(i * tFrequency, j * tFrequency, 8) * this.altitudeExtrema.range  / (1 + v.altitude);
+			v.temperature = (0.5 + 0.5 * this.png.fnoise2d(i * tFrequency, j * tFrequency, 8));
+			v.temperature = THREE.Math.clamp(v.temperature * this.altitudeExtrema.range / (1 + v.altitude), 0, 1);
+			v.temperature = THREE.Math.clamp(v.temperature + tOffset, 0, 1);
 		}
 
 	return this;
@@ -61,10 +76,12 @@ TerrainGenerator.prototype.apply = function(func, edges, opts, iterations) {
 	if(!iterations) iterations = 1;
 	var o = edges ? 0 : 1;
 	opts = opts || {};
-	for(var t = 0; t < iterations; ++t)
+	for(var t = 0; t < iterations; ++t) {
+		console.log('Applying operation, iteration ' + (t + 1) + ' out of ' + iterations);
 		for(var i = o; i < this.width - o; ++i)
 			for(var j = o; j < this.height - o; ++j)
 				func(this, i, j, opts);
+	}
 
 	return this;
 };
@@ -226,14 +243,14 @@ TerrainGenerator.prototype.createGeometry = function(gridSize) {
 TerrainGenerator.DefaultMoistureClassification = [
 	{ value: 0.3, name: 'Dry' }, 
 	{ value: 0.4, name: 'Normal' }, 
-	{ value: 0.6, name: 'Wet' },
+	{ value: 0.8, name: 'Wet' },
 	{ value: 1.0, name: 'Underwater'}
 ];
 TerrainGenerator.DefaultTemperatureClassification = [
-	{ value: 0.03, name: 'Freezing' }, 
-	{ value: 0.04, name: 'Cold' }, 
-	{ value: 0.3, name: 'Normal' },
-	{ value: 0.5, name: 'Hot' }
+	{ value: 0.1, name: 'Freezing' }, 
+	{ value: 0.3, name: 'Cold' }, 
+	{ value: 0.5, name: 'Normal' },
+	{ value: 0.7, name: 'Hot' }
 ];
 
 TerrainGenerator.DefaultBiomeMatrix = 
