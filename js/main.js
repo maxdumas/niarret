@@ -81,9 +81,7 @@ function generateTerrain() {
 						.generateHeightmap(0.002, 8)
 						.generateMoisture(0.01, 1)
 						.apply(TerrainGenerator.MusgraveHydraulicErosion, false, null, 500)
-						.apply(TerrainGenerator.Smooth, false, null)
-						.apply(TerrainGenerator.BiomeClassification, true, classificationOpts)
-						.createGeometry(0.2);
+						.apply(TerrainGenerator.Smooth, false, null);
 }
 
 function classifyBiomes(generator, opts) {
