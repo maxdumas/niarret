@@ -3,6 +3,7 @@ var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 var renderer = new THREE.WebGLRenderer();
+renderer.setClearColor(new THREE.Color('rgb(66,151,255)'));
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -47,35 +48,40 @@ var classificationOpts = {
 	temperatureClass: TerrainGenerator.DefaultTemperatureClassification,
 	moistureClass: TerrainGenerator.DefaultMoistureClassification,
 	biomeMatrix: TerrainGenerator.DefaultBiomeMatrix,
-	colorGradient: function(v) { 
-		if(v.biome.name == 'TemperateDesert')
-			return new THREE.Color(1, 1, 0); //YELLOW
-		else if(v.biome.name == 'TemperateDeciduousForest')
-			return new THREE.Color(0, 1, 0); //NEON GREEN
-		else if(v.biome.name == 'TemperateRainForest')
-			return new THREE.Color(0, 1, 1); //CYAN
-		else if(v.biome.name == 'Water')			
-			return new THREE.Color(0, 0, 1); //BLUE
-		else if(v.biome.name == 'Grassland')
-			return new THREE.Color(0, 0.8, 0); //Dark green
-		else if(v.biome.name == 'Shrubland')
-			return new THREE.Color(0.2, 0.4, 0); //Darker green
-		else if(v.biome.name == 'Taiga')
-			return new THREE.Color(0, 0.4, 0.4); //Dark turqoise
-		else if(v.biome.name == 'Glacier')
-			return new THREE.Color(0, 0.8, 0.8); //Dark cyan
-        else if(v.biome.name == 'SubTropicalDesert')
-        	return new THREE.Color(0.8, 0.4, 0); //Sandy orange
-		else if(v.biome.name == 'TropicalSeasonalForest')
-			return new THREE.Color(0, 0.6, 0.3); //Green with blue 
-		else if(v.biome.name == 'TropicalRainForest')
-			return new THREE.Color(0.2, 0.4, 0); //Darkest green
-		else if(v.biome.name == 'Bare')
-			return new THREE.Color(0.6, 0.6, 0); //Dark yellow
+	colorGradient: function(v) {
+		if(v.biome.name == 'Bare')
+			return new THREE.Color('rgb(153,153,153)');
 		else if(v.biome.name == 'Tundra')
-			return new THREE.Color(0.88, 0.88, 0.88); //Grey
+			return new THREE.Color('rgb(225,225,225)');
 		else if(v.biome.name == 'Snow')
-			return new THREE.Color(1, 1, 1); //White
+			return new THREE.Color('rgb(255,255,255)');
+		else if(v.biome.name == 'Glacier')
+			return new THREE.Color('rgb(209,255,255)');
+
+		else if(v.biome.name == 'Grassland')
+			return new THREE.Color('rgb(153,204,204)');
+		else if(v.biome.name == 'Shrubland')
+			return new THREE.Color('rgb(128,204,153)');
+		else if(v.biome.name == 'Taiga')
+			return new THREE.Color('rgb(46,150,121)');
+
+		else if(v.biome.name == 'TemperateDesert')
+			return new THREE.Color('rgb(255,233,151)');
+		else if(v.biome.name == 'TemperateDeciduousForest')
+			return new THREE.Color('rgb(67,168,94)');
+		else if(v.biome.name == 'TemperateRainForest')
+			return new THREE.Color('rgb(107,188,60)');
+		else if(v.biome.name == 'Water')			
+			return new THREE.Color('rgb(66,151,255)');
+
+        else if(v.biome.name == 'SubTropicalDesert')
+        	return new THREE.Color('rgb(224,181,112)');
+		else if(v.biome.name == 'TropicalSeasonalForest')
+			return new THREE.Color('rgb(0,153,76)');
+		else if(v.biome.name == 'TropicalRainForest')
+			return new THREE.Color('rgb(51,102,0)');
+
+		
 		else {
 			return new THREE.Color(1, 0, 0);		
 		}
@@ -85,8 +91,8 @@ var classificationOpts = {
 function generateTerrain() {
 	return (new TerrainGenerator())
 			.dim(250, 250)
-			.generateHeightmap(0.002, 8)
-			.generateClimate(0.01, 1)
+			.generateHeightmap(0.002, 16)
+			.generateClimate(0.01, 0.005)
 			.apply(TerrainGenerator.MusgraveHydraulicErosion, false, null, 500)
 			.apply(TerrainGenerator.Smooth, false, null);
 }

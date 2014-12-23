@@ -28,7 +28,7 @@ TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
 	this.values = [];
 	for(var i = 0; i < this.width; ++i)
 		for(var j = 0; j < this.height; ++j) {
-			var h = amplitude * this.png.fnoise2d(i * frequency, j * frequency, 8);
+			var h = (amplitude / 2) + (amplitude / 2) * this.png.fnoise2d(i * frequency, j * frequency, 8);
 			if (h < this.altitudeExtrema.min) this.altitudeExtrema.min = h;
 			else if (h > this.altitudeExtrema.max) this.altitudeExtrema.max = h;
 
@@ -36,7 +36,7 @@ TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
 				altitude: h
 			});
 		}
-
+		this.altitudeExtrema.range = this.altitudeExtrema.max - this.altitudeExtrema.min;
 	return this;
 };
 
@@ -51,8 +51,7 @@ TerrainGenerator.prototype.generateClimate = function(mFrequency, tFrequency) {
 			v.moisture = v.waterLevel = v.rainfall = m; 
 			v.sediment = m / 2;
 			//Temperature is loosely inversely related to altitude. 
-			var alt_weight = 0.6;
-			v.temperature = 0.5 + 0.5 * this.png.fnoise2d(i * mFrequency, j * mFrequency, 8) * 1 / (alt_weight);
+			v.temperature = 0.5 + 0.5 * this.png.fnoise2d(i * tFrequency, j * tFrequency, 8) * this.altitudeExtrema.range  / (1 + v.altitude);
 		}
 
 	return this;
