@@ -52,9 +52,10 @@ TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
 			v.sediment = 0.25;
 			v.temperature = 0.6;
 			//Temperature is loosely inversely related to altitude. 
-			var alt_weight = 0.7;
-			v.temperature = Math.abs(amplitude * this.png.noise2d(i * frequency, j * frequency) * 1 / (alt_weight * v.altitude));
-
+			var alt_weight = 0.6;
+			v.temperature = Math.abs( amplitude * this.png.noise2d(i * frequency, j * frequency) * 1 / (alt_weight * v.altitude));
+			//v.temperature = Math.abs(1 / (alt_weight * v.altitude));
+		
 		}
 
 	return this;
@@ -231,8 +232,8 @@ TerrainGenerator.DefaultMoistureClassification = [
 	{ value: 1.0, name: 'Underwater'}
 ];
 TerrainGenerator.DefaultTemperatureClassification = [
-	{ value: 0.1, name: 'Freezing' }, 
-	{ value: 0.2, name: 'Cold' }, 
+	{ value: 0.03, name: 'Freezing' }, 
+	{ value: 0.04, name: 'Cold' }, 
 	{ value: 0.3, name: 'Normal' },
 	{ value: 0.5, name: 'Hot' }
 ];
