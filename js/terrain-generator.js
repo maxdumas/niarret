@@ -40,22 +40,19 @@ TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
 	return this;
 };
 
-TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
+TerrainGenerator.prototype.generateClimate = function(mFrequency, tFrequency) {
 	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
 
-	this.moistureExtrema = { min: Number.MAX_VALUE, max: Number.MIN_VALUE };
 	for(var i = 0; i < this.width; ++i)
 		for(var j = 0; j < this.height; ++j) {
-			var m = 0.5; //amplitude * this.png.noise2d(i * frequency, j * frequency);
-			var v = this.values[i * this.height + j];
-			v.moisture = m;
-			v.sediment = 0.25;
-			v.temperature = 0.6;
+			var v = this.get(i, j);
+			var m = 0.5 + 0.5 * this.png.noise2d(i * mFrequency, j * mFrequency);
+			// These are all the same until hydraulic processes are applied
+			v.moisture = v.waterLevel = v.rainfall = m; 
+			v.sediment = m / 2;
 			//Temperature is loosely inversely related to altitude. 
 			var alt_weight = 0.6;
-			v.temperature = Math.abs( amplitude * this.png.noise2d(i * frequency, j * frequency) * 1 / (alt_weight * v.altitude));
-			//v.temperature = Math.abs(1 / (alt_weight * v.altitude));
-		
+			v.temperature = 0.5 + 0.5 * this.png.fnoise2d(i * mFrequency, j * mFrequency, 8) * 1 / (alt_weight);
 		}
 
 	return this;
@@ -103,7 +100,7 @@ TerrainGenerator.MusgraveHydraulicErosion = function(terrain, i, j) {
 
 			// var k = (i + di) * terrain.height + (j + dj);
 			var u = terrain.get(i + di, j + dj);
-			var dhi = (v.altitude + v.moisture) - (u.altitude + u.moisture);
+			var dhi = (v.altitude + v.waterLevel) - (u.altitude + u.waterLevel);
 
 			// v's height and water make it higher than its surrounding neighbors,
 			// so prepare to distribute the water
@@ -120,12 +117,12 @@ TerrainGenerator.MusgraveHydraulicErosion = function(terrain, i, j) {
 
 	dh.forEach(function(x) {
 		var u = x.u;
-		var dw = Math.min(v.moisture, (v.moisture + v.altitude) - (u.moisture + u.altitude));
+		var dw = Math.min(v.waterLevel, (v.waterLevel + v.altitude) - (u.waterLevel + u.altitude));
 
 		dw *= x.dhi / sum;
 
-		v.moisture -= dw; // BUG: if dw = v.moisture here, all moisture in v goes to this one u!
-		u.moisture += dw;
+		v.waterLevel -= dw; // BUG: if dw = v.moisture here, all moisture in v goes to this one u!
+		u.waterLevel += dw;
 		var cs = Kc * dw; // Sediment capacity
 
 		if(v.sediment >= cs) { // If vs is holding more sediment than it can...
@@ -138,6 +135,8 @@ TerrainGenerator.MusgraveHydraulicErosion = function(terrain, i, j) {
 			v.sediment = 0;
 		}
 	});
+
+	v.moisture = (v.rainfall + v.waterLevel) / 2;
 };
 
 TerrainGenerator.BiomeClassification = function(terrain, i, j, opts) {

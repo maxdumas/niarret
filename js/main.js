@@ -29,8 +29,15 @@ mat.vertexColors = THREE.FaceColors;
 var mesh = new THREE.Mesh(new THREE.Geometry(), mat);
 scene.add(mesh);
 
-var heatMapToggle = 0;
-var heatmapOpts = {
+var mapDisplayState = 0;
+var keyPressed = false;
+var moistureMapOpts = {
+	colorGradient: function(v) {
+		return new THREE.Color(0, 0, v.moisture);
+	}
+}
+
+var tempMapOpts = {
 	colorGradient: function(v) {
 		return new THREE.Color(v.temperature, 0, 0);
 	}
@@ -77,27 +84,16 @@ var classificationOpts = {
 
 function generateTerrain() {
 	return (new TerrainGenerator())
-						.dim(250, 250)
-						.generateHeightmap(0.002, 8)
-						.generateMoisture(0.01, 1)
-						.apply(TerrainGenerator.MusgraveHydraulicErosion, false, null, 500)
-						.apply(TerrainGenerator.Smooth, false, null)
-						.apply(TerrainGenerator.BiomeClassification, true, classificationOpts)
-						.createGeometry(0.2);
-}
-
-function classifyBiomes(generator, opts) {
-	generator.apply(TerrainGenerator.BiomeClassification, true, opts);
-
-}
-
-function finalize(generator) {
-	mesh.geometry = generator.createGeometry(0.2);
+			.dim(250, 250)
+			.generateHeightmap(0.002, 8)
+			.generateClimate(0.01, 1)
+			.apply(TerrainGenerator.MusgraveHydraulicErosion, false, null, 500)
+			.apply(TerrainGenerator.Smooth, false, null);
 }
 
 var terrain = generateTerrain();
-classifyBiomes(terrain, classificationOpts)
-finalize(terrain);
+terrain.apply(TerrainGenerator.BiomeClassification, true, classificationOpts);
+mesh.geometry = terrain.createGeometry(0.2);
 
 clock.start();
 function render() { 
@@ -112,25 +108,30 @@ function render() {
 render();
 
 function onKeyDown(event) {
+	if(keyPressed) return false;
+	keyPressed = true;
+
 	if(event.keyCode == 69)  { // Letter E
 		terrain = generateTerrain();
-		classifyBiomes(terrain, classificationOpts);
-		finalize(terrain);
-	}
-	else if (event.keyCode == 84 && heatMapToggle == 0) { //Letter F
-		classifyBiomes(terrain, heatmapOpts);
-		finalize(terrain);
-		heatMapToggle += 1;
-	} 
-	else if (event.keyCode == 84 && heatMapToggle == 1) {
-		classifyBiomes(terrain, classificationOpts);
-		finalize(terrain);
-		heatMapToggle -= 1;
+		terrain.apply(TerrainGenerator.BiomeClassification, true, classificationOpts);
+		mesh.geometry = terrain.createGeometry(0.2);
+	} else if (event.keyCode == 49 && mapDisplayState != 0) { //Letter T
+		mapDisplayState = 0;
+		terrain.apply(TerrainGenerator.BiomeClassification, true, classificationOpts);
+		mesh.geometry = terrain.createGeometry(0.2);
+	} else if (event.keyCode == 50 && mapDisplayState != 1) { //Letter T
+		mapDisplayState = 1;
+		terrain.apply(TerrainGenerator.BiomeClassification, true, tempMapOpts);
+		mesh.geometry = terrain.createGeometry(0.2);
+	} else if (event.keyCode == 51 && mapDisplayState != 2) { //Letter G
+		mapDisplayState = 2;
+		terrain.apply(TerrainGenerator.BiomeClassification, true, moistureMapOpts);
+		mesh.geometry = terrain.createGeometry(0.2);
 	}
 }
 document.addEventListener("keydown", onKeyDown);
 
 function onKeyUp() {
-
+	keyPressed = false;
 }
 document.addEventListener("keyup", onKeyUp);
