@@ -49,8 +49,8 @@ TerrainGenerator.prototype.generateHeightmap = function(frequency, amplitude) {
 
 TerrainGenerator.prototype.generateClimate = function(mFrequency, tFrequency) {
 	if(this.width <= 0 || this.height <= 0) throw "Must specify a terrain width and height before generation";
-	var mOffset = THREE.Math.randFloatSpread(0.5); // We use this make biomes randomly cold
-	var tOffset = THREE.Math.randFloatSpread(0.5); // or arid, or vice versa
+	var mOffset = THREE.Math.randFloatSpread(1); // We use this make biomes randomly cold
+	var tOffset = THREE.Math.randFloatSpread(1); // or arid, or vice versa
 	console.log("Generating climate...")
 	console.log('Moisture Offset: ' + mOffset);
 	console.log('Temperature Offset: ' + tOffset);
