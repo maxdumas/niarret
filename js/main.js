@@ -34,9 +34,6 @@ var classificationOpts = {
 	moistureClass: TerrainGenerator.DefaultMoistureClassification,
 	biomeMatrix: TerrainGenerator.DefaultBiomeMatrix,
 	colorGradient: function(v) { 
-
-		//'TemperateDesert',		'TemperateDeciduousForest', 'TemperateRainForest', 'Water']
-		
 		if(v.biome.name == 'TemperateDesert')
 			return new THREE.Color(1, 1, 0);
 		else if(v.biome.name == 'TemperateDeciduousForest')
@@ -66,17 +63,15 @@ var classificationOpts = {
 		else if(v.biome.name == 'Snow')
 			return new THREE.Color(1, 1, 1);
 		else {
-			return new THREE.Color(1, 0, 0);		}
-
-		
-		/*
+			return new THREE.Color(1, 0, 0);
+		}
 
 		//To see heatmap: 
-		//return new THREE.Color(v.temperature, 0, 0);
+		// return new THREE.Color(v.temperature, 0, 0);
 
-		var c = new THREE.Color(v.temperature, 0.3, 0);
-		return c.lerp(new THREE.Color(0, 0.4, v.moisture), 0.1);
-		*/
+		// var c = new THREE.Color(v.temperature, 0.3, 0);
+		// return c.lerp(new THREE.Color(0, 0.4, v.moisture), 0.1);
+		
 	}
 };
 
@@ -88,6 +83,7 @@ function generateTerrain() {
 						.generateHeightmap(0.002, 8)
 						.generateMoisture(0.01, 1)
 						.apply(TerrainGenerator.MusgraveHydraulicErosion, false, null, 500)
+						.apply(TerrainGenerator.Smooth, false, null)
 						.apply(TerrainGenerator.BiomeClassification, true, classificationOpts)
 						.createGeometry(0.2);
 }

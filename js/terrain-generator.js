@@ -63,7 +63,7 @@ TerrainGenerator.prototype.generateMoisture = function(frequency, amplitude) {
 TerrainGenerator.prototype.apply = function(func, edges, opts, iterations) {
 	if(!iterations) iterations = 1;
 	var o = edges ? 0 : 1;
-
+	opts = opts || {};
 	for(var t = 0; t < iterations; ++t)
 		for(var i = o; i < this.width - o; ++i)
 			for(var j = o; j < this.height - o; ++j)
@@ -71,6 +71,20 @@ TerrainGenerator.prototype.apply = function(func, edges, opts, iterations) {
 
 	return this;
 };
+
+TerrainGenerator.Smooth = function(terrain, i, j, opts) {
+	var a = opts.neighborSmoothWeight || 1;
+
+	var avg = 0;
+	for(var di = -1; di <= 1; ++di) // Calculating distribution of water
+		for(var dj = -1; dj <= 1; ++dj) {
+			if(di == 0 && dj == 0) continue;
+			avg += terrain.get(i + di, j + dj).altitude;
+		}
+	avg /= 8;
+	var v = terrain.get(i, j);
+	v.altitude = a * avg + (1 - a) * v.altitude;
+}
 
 TerrainGenerator.MusgraveHydraulicErosion = function(terrain, i, j) {
 	// This is based on Musgrave[1989]
@@ -203,7 +217,7 @@ TerrainGenerator.prototype.createGeometry = function(gridSize) {
 		geo.faces.push(faces[i]);
 
 	geo.computeFaceNormals();
-	geo.computeVertexNormals();
+	// geo.computeVertexNormals();
 
 	return geo;
 };
