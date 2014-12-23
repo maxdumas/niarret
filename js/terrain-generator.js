@@ -226,8 +226,8 @@ TerrainGenerator.prototype.createGeometry = function(gridSize) {
 // it fails to exceed that classification's moisture value
 TerrainGenerator.DefaultMoistureClassification = [
 	{ value: 0.3, name: 'Dry' }, 
-	{ value: 0.6, name: 'Normal' }, 
-	{ value: 0.9, name: 'Wet' },
+	{ value: 0.4, name: 'Normal' }, 
+	{ value: 0.6, name: 'Wet' },
 	{ value: 1.0, name: 'Underwater'}
 ];
 TerrainGenerator.DefaultTemperatureClassification = [
